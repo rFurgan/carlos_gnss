@@ -90,7 +90,7 @@ class Api:
             logging.error("No Hero initialized or found")
             sys.exit(1)
         for road_user in self._road_users:
-            self._gnss_receivers.append(GnssReceiver(road_user, self._world, self._hero.on_position_data, error_range))
+            self._gnss_receivers.append(GnssReceiver(road_user, self._world, self._hero.on_position_data, error_range, tick))
 
     def stop(self) -> None:
         """Method to stop the polling of positions and calculation of data by killing the thread and main loop"""
