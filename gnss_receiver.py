@@ -1,3 +1,4 @@
+from typing import Callable
 from datatypes import Coordinate
 import random
 import carla
@@ -12,12 +13,12 @@ class GnssReceiver:
         error_range (float): Error range in which the collected GNSS data should be distored
         tick (float): Seconds between each position detection
     """
-    def __init__(self, actor, world, on_data, error_range: float, tick: float) -> None:
-        self._actor = actor
-        self._on_data = on_data
-        self._distortion = lambda: round(random.uniform(-error_range, error_range), 3)
-        self._tick = tick
-        self._sensor = world.spawn_actor(
+    def __init__(self, actor: carla.Actor, world: carla.World, on_data: Callable, error_range: float, tick: float) -> None:
+        self._actor: carla.Actor = actor
+        self._on_data: Callable = on_data
+        self._distortion: Callable = lambda: round(random.uniform(-error_range, error_range), 3)
+        self._tick: float = tick
+        self._sensor: carla.GnssSensor = world.spawn_actor(
             world.get_blueprint_library().find("sensor.other.gnss"),
             self._actor.get_transform(),
             self._actor,
