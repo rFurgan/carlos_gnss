@@ -3,7 +3,8 @@ from scipy import interpolate
 from datatypes import Coordinate, Subscription
 from typing import Dict, List, Union, Tuple
 from actor import Actor
-import math_operations as mo
+from math_operations import MathOperations as mo
+
 import json
 import logging
 
