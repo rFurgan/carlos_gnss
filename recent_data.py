@@ -13,11 +13,19 @@ class RecentData:
 
     def __init__(self, expiration_time: float) -> None:
         self._expiration_time: float = expiration_time
-        self._recent_timestamp: Recent = Recent(None, None)
-        self._recent_position: Recent = Recent(None, None)
-        self._recent_orientation: Recent = Recent(None, None)
+        self._recent_timestamp: Recent[Union[float, None]] = Recent[Union[float, None]](
+            None, None
+        )
+        self._recent_position: Recent[Union[Coordinate, None]] = Recent[
+            Union[Coordinate, None]
+        ](None, None)
+        self._recent_orientation: Recent[Union[float, None]] = Recent[
+            Union[float, None]
+        ](None, None)
+        self._recent_velocity: Recent[Union[float, None]] = Recent[Union[float, None]](
+            None, None
+        )
         self._orientation: Union[float, None] = None
-        self._velocity: float = 0
         self._stored: Dict[float, Coordinate] = {}
 
     @property
@@ -31,7 +39,7 @@ class RecentData:
 
     def update(
         self, timestamp: float, position: Coordinate
-    ) -> Union[Tuple[float, float, float], Tuple[None, None, None]]:
+    ) -> Union[Tuple[float, float, float, float], Tuple[None, None, None, None]]:
         """Updates the previous and current timestamp and position returning the calculated data
 
         Args:
@@ -39,8 +47,8 @@ class RecentData:
             position (Coordinate): Most recent position to save
 
         Returns:
-            Tuple[None, None, None]: Insufficient data to calculate velocity, orientation and angular velocity
-            Tuple[float, float, float]: Current velocity, orientation and angular velocity
+            Tuple[None, None, None, None]: Insufficient data to calculate velocity, orientation, angular velocity and accelaration
+            Tuple[float, float, float, float]: Current velocity, orientation, angular velocity and accelaration
         """
         self._store(timestamp, position)
         if (
@@ -57,7 +65,7 @@ class RecentData:
             self._recent_position.current = position
 
             if self._recent_position.has_none():
-                return None, None, None
+                return None, None, None, None
             vec: Vector = mo.vector(
                 self._recent_position.current, self._recent_position.previous
             )
@@ -65,8 +73,9 @@ class RecentData:
                 self._get_velocity(vec),
                 self._get_orientation(vec),
                 self._get_angular_velocity(),
+                self._get_accelaration(),
             )
-        return None, None, None
+        return None, None, None, None
 
     def _get_velocity(self, vec: Vector) -> float:
         """Calculates and returns the current velocity
@@ -77,10 +86,28 @@ class RecentData:
         Returns:
             float: Current velocity
         """
-        self._velocity = mo.velocity(
+        velocity: float = mo.velocity(
             vec, self._recent_timestamp.previous, self._recent_timestamp.current
         )
-        return self._velocity
+        self._recent_velocity.previous = self._recent_velocity.current
+        self._recent_velocity.current = velocity
+        return self._recent_velocity.current
+
+    def _get_accelaration(self) -> float:
+        """Calculates and returns the current accelaration
+
+        Returns:
+            float: Current accelaration
+        """
+        if self._recent_velocity.has_none() or self._recent_timestamp.has_none():
+            return 0
+        delta_v: float = self._recent_velocity.current - self._recent_velocity.previous
+        delta_t: float = (
+            self._recent_timestamp.current - self._recent_timestamp.previous
+        )
+        if delta_t == 0:
+            return 0
+        return delta_v / delta_t
 
     def _get_orientation(self, vec: Vector) -> Union[float, None]:
         """Calculates and returns the current orientation
@@ -95,13 +122,13 @@ class RecentData:
         orientation: Union[float, None] = mo.angle_to_y_axis(vec)
         self._recent_orientation.previous = self._recent_orientation.current
         self._recent_orientation.current = orientation
-        if orientation != None and self._velocity > 0:
+        if (
+            orientation != None
+            and self._recent_velocity.current != None
+            and self._recent_velocity.current > 0
+        ):
             self._orientation = orientation
-        return (
-            orientation
-            if orientation != None and self._velocity > 0
-            else self._orientation
-        )
+        return self._orientation
 
     def _get_angular_velocity(self) -> float:
         """Calculates and returns the current angular velocity

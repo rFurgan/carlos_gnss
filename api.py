@@ -4,10 +4,12 @@ import csv
 import carla
 import pathlib
 import math_operations as mo
+
 from hero import Hero
 from actor import Actor
-from typing import Dict, List, Callable, Union
+from typing import Dict, List, Union
 from common import EActorType, VehicleTypes, ROAD_USER_CODE
+from datatypes import Subscription
 from gnss_receiver import GnssReceiver
 
 
@@ -36,7 +38,7 @@ class Api:
     ) -> None:
         self._actors: Dict[int, Actor] = {}
         self._road_users: List[carla.Actor] = []
-        self._subscribers: List[Callable] = []
+        self._subscribers: List[Subscription] = []
         self._stop: bool = False
         self._gnss_receivers: List[GnssReceiver] = []
         self._hero: Union[Hero, None] = None
@@ -46,7 +48,7 @@ class Api:
         self._header_written: bool = False
         try:
             client: carla.Client = carla.Client(host, port)
-            client.set_timeout(2.0)
+            client.set_timeout(5.0)
             self._world: carla.World = client.get_world()
         except RuntimeError as err:
             logging.error(f"Something went wrong connecting: {err}")
@@ -90,7 +92,15 @@ class Api:
             logging.error("No Hero initialized or found")
             sys.exit(1)
         for road_user in self._road_users:
-            self._gnss_receivers.append(GnssReceiver(road_user, self._world, self._hero.on_position_data, error_range, tick))
+            self._gnss_receivers.append(
+                GnssReceiver(
+                    road_user,
+                    self._world,
+                    self._hero.on_position_data,
+                    error_range,
+                    tick,
+                )
+            )
 
     def stop(self) -> None:
         """Method to stop the polling of positions and calculation of data by killing the thread and main loop"""
@@ -113,22 +123,22 @@ class Api:
             for actor_id in self._actors:
                 writer.writerow(self._actors[actor_id].get_data())
 
-    def subscribe(self, callback: Callable) -> None:
+    def subscribe(self, subscription: Subscription) -> None:
         """Method to add callback function to which the calculated data will be forwarded to in runtime
 
         Args:
-            callback (function): Callback function with one argument holding the data in JSON format
+            subscription (Subscription): Callback function with one argument holding the data in JSON format
         """
-        self._subscribers.append(callback)
+        self._subscribers.append(subscription)
 
-    def unsubscribe(self, callback: Callable) -> None:
+    def unsubscribe(self, subscription: Subscription) -> None:
         """Method to remove callback function to which the calculated data is forwarded to in runtime
 
         Args:
-            callback (function): Callback function that should be removed
+            subscription (Subscription): Callback function that should be removed
         """
         for index in range(len(self._subscribers)):
-            if self._subscribers[index] == callback:
+            if self._subscribers[index] == subscription:
                 self._subscribers.pop(index)
                 break
 

@@ -2,6 +2,8 @@ from common import Y_AXIS
 from datatypes import Coordinate, Vector
 from math import atan2, degrees, sqrt
 from typing import Union
+from carla import Location
+import random
 
 
 def vector(point: Coordinate, foot: Coordinate) -> Vector:
@@ -56,7 +58,7 @@ def vector_length(vector_v: Vector) -> float:
     Returns:
         float: Length of the vector
     """
-    return round(sqrt((vector_v.x ** 2) + (vector_v.y ** 2) + (vector_v.z ** 2)), 2)
+    return round(sqrt((vector_v.x**2) + (vector_v.y**2) + (vector_v.z**2)), 2)
 
 
 def velocity(vector_v: Vector, t_before: float, t_after: float) -> float:
@@ -126,3 +128,29 @@ def angular_speed(
     delta_theta: float = abs(angle_a - angle_b)
     delta_t: float = abs(t_after - t_before)
     return round(delta_theta / delta_t, 2)
+
+
+def distorted_coordinate(location: Location, error_range: float):
+    x_real = location.x
+    y_real = location.y
+    z_real = location.z
+
+    # set a random distortion as the radius of a circle on which the new distorted coordinate is
+    r = random.uniform(0, error_range)
+
+    # select a random point within the radius of the circle as x-coordinate
+    x_fake = random.uniform(x_real - r, x_real + r)
+
+    # insert generated x-coordinate into circle formula and calculate y-coordinate
+    # select randomly between the two distorted y-values
+    y_fake = (
+        sqrt((r**2) - ((x_fake - x_real) ** 2)) + y_real
+        if random.uniform(0, 2) <= 1
+        else -sqrt((r**2) - ((x_fake - x_real) ** 2)) + y_real
+    )
+
+    return Coordinate(
+        x=x_fake,
+        y=y_fake,
+        z=z_real,
+    )

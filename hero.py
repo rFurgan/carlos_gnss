@@ -1,7 +1,7 @@
 from recent_data import RecentData
 from scipy import interpolate
-from datatypes import Coordinate
-from typing import Dict, Callable, List, Union, Tuple
+from datatypes import Coordinate, Subscription
+from typing import Dict, List, Union, Tuple
 from actor import Actor
 import math_operations as mo
 import json
@@ -14,19 +14,19 @@ class Hero:
     Args:
         hero_id (int): Id of the hero in the connected Carla world
         actors (Dict[int, Actor]): Dictionary with all actors in the connected Carla world with the id as the key
-        subscribers (List[Callable]): List
+        subscribers (List[Subscription]): List
     """
 
     def __init__(
         self,
         hero_id: int,
         actors: Dict[int, Actor],
-        subscribers: List[Callable],
+        subscribers: List[Subscription],
         relevance_radius: float,
     ) -> None:
         self._hero_id: int = hero_id
         self._actors: Dict[int, Actor] = actors
-        self._subscribers: List[Callable] = subscribers
+        self._subscribers: List[Subscription] = subscribers
         self._recent_data: Dict[int, RecentData] = {}
         self._relevance_radius: float = relevance_radius
 
@@ -40,9 +40,9 @@ class Hero:
         """
         if id not in self._recent_data:
             self._recent_data[id] = RecentData(3)
-        velocity, orientation, angular_speed = self._recent_data[id].update(
-            timestamp, position
-        )
+        velocity, orientation, angular_speed, accelaration = self._recent_data[
+            id
+        ].update(timestamp, position)
         if id != self._hero_id:
             distance_to_hero, angle_to_hero = self._hero_dependent_data(id, timestamp)
         else:
@@ -53,7 +53,12 @@ class Hero:
             and id in self._actors
         ):
             self._actors[id].add_data(
-                velocity, orientation, angular_speed, distance_to_hero, angle_to_hero
+                velocity,
+                orientation,
+                angular_speed,
+                accelaration,
+                distance_to_hero,
+                angle_to_hero,
             )
             try:
                 for subscriber in self._subscribers:
@@ -64,6 +69,7 @@ class Hero:
                                 velocity,
                                 orientation,
                                 angular_speed,
+                                accelaration,
                                 distance_to_hero,
                                 angle_to_hero,
                             ]

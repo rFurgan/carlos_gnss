@@ -1,56 +1,54 @@
 from datatypes import Coordinate
-from typing import Union
+from typing import TypeVar, Generic
+
+T = TypeVar("T")
 
 
-class Recent:
+class Recent(Generic[T]):
     """Class to represent previous and current data
 
     Args:
-        previous (float | Coordinate | None]): Previous data
-        current (float | Coordinate | None]): Most recent data
+        previous (T): Previous data
+        current (T): Most recent data
     """
 
     def __init__(
         self,
-        previous: Union[float, Coordinate, None],
-        current: Union[float, Coordinate, None],
+        previous: T,
+        current: T,
     ) -> None:
-        self._previous: Union[float, Coordinate, None] = previous
-        self._current: Union[float, Coordinate, None] = current
+        self._previous: T = previous
+        self._current: T = current
 
     @property
-    def previous(self) -> Union[float, Coordinate, None]:
+    def previous(self) -> T:
         """
         Returns:
-            float: Previously stored float data
-            Coordinate: Previously stored Coordinate
-            None: No data stored previously
+            T: Value that is stored as previous data
         """
         return self._previous
 
     @property
-    def current(self) -> Union[float, Coordinate, None]:
+    def current(self) -> T:
         """
         Returns:
-            float: Most recently stored float data
-            Coordinate: Most recently stored Coordinate
-            None: No data stored recently
+            T: Value that is stored as current data
         """
         return self._current
 
     @previous.setter
-    def previous(self, previous: Union[float, Coordinate, None]) -> None:
+    def previous(self, previous: T) -> None:
         """
         Args:
-            previous (float | Coordinate | None]): Value to set previous
+            previous (T): Value to set as previous data
         """
         self._previous = previous
 
     @current.setter
-    def current(self, current: Union[float, Coordinate, None]) -> None:
+    def current(self, current: T) -> None:
         """
         Args:
-            current (float | Coordinate | None]): Value to set current
+            current (T): Value to set as current data
         """
         self._current = current
 
