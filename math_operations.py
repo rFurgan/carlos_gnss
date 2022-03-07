@@ -132,7 +132,7 @@ class MathOperations:
         return round(delta_theta / delta_t, 2)
 
     @staticmethod
-    def distorted_coordinate(location: Location, error_range: float):
+    def distorted_coordinate(location: Location, error_range: float) -> Coordinate:
         x_real = location.x
         y_real = location.y
         z_real = location.z
