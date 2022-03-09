@@ -132,27 +132,26 @@ class MathOperations:
         return round(delta_theta / delta_t, 2)
 
     @staticmethod
-    def distorted_coordinate(location: Location, error_range: float) -> Coordinate:
-        x_real = location.x
-        y_real = location.y
-        z_real = location.z
+    def distorted_coordinate(
+        x: float, y: float, z: float, error_range: float
+    ) -> Coordinate:
 
         # set a random distortion as the radius of a circle on which the new distorted coordinate is
         r = random.uniform(0, error_range)
 
         # select a random point within the radius of the circle as x-coordinate
-        x_fake = random.uniform(x_real - r, x_real + r)
+        x_distorted = random.uniform(x - r, x + r)
 
         # insert generated x-coordinate into circle formula and calculate y-coordinate
         # select randomly between the two distorted y-values
-        y_fake = (
-            sqrt((r**2) - ((x_fake - x_real) ** 2)) + y_real
+        y_distorted = (
+            sqrt((r**2) - ((x_distorted - x) ** 2)) + y
             if random.uniform(0, 2) <= 1
-            else -sqrt((r**2) - ((x_fake - x_real) ** 2)) + y_real
+            else -sqrt((r**2) - ((x_distorted - x) ** 2)) + y
         )
 
         return Coordinate(
-            x=x_fake,
-            y=y_fake,
-            z=z_real,
+            x_distorted,
+            y_distorted,
+            z,
         )
