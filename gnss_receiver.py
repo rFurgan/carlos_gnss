@@ -24,10 +24,11 @@ class GnssReceiver:
     ) -> None:
         self._actor: carla.Actor = actor
         self._on_data: GnssCallback = on_data
-        self._tick: float = tick
         self._error_range: float = error_range
+        bp = world.get_blueprint_library().find("sensor.other.gnss")
+        bp.set_attribute("sensor_tick", str(tick))
         self._sensor: carla.GnssSensor = world.spawn_actor(
-            world.get_blueprint_library().find("sensor.other.gnss"),
+            bp,
             self._actor.get_transform(),
             self._actor,
         )
